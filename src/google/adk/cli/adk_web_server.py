@@ -602,17 +602,29 @@ class AdkWebServer:
           state=state,
           session_id=session_id,
       )
-      run_request = RunAgentRequest(
+      default_request = RunAgentRequest(
           app_name=app_name,
           user_id=user_id,
           session_id=session.id,
           new_message=types.Content(
               role="user",
-              parts=[types.Part(text="Hii! how can u help me?")],
+              parts=[types.Part(text="Hi! How can you help me?")],
           ),
           streaming=True
-      )
-      self.get_fast_api_app.run_agent_sse(run_request)
+      )      
+      runner = await self.get_runner_async(app_name)
+      async with Aclosing(
+          runner.run_async(
+              user_id=user_id,
+              session_id=session.id,
+              new_message=default_request.new_message,
+              state_delta=default_request.state_delta,
+              run_config=RunConfig(streaming_mode=StreamingMode.NONE),
+              invocation_id=default_request.invocation_id,
+          )
+      ) as agen:
+          async for _event in agen:
+              break
       logger.info("New session created: %s", session.id)
       return session
     except AlreadyExistsError as e:
