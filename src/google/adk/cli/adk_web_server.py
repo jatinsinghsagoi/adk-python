@@ -602,6 +602,17 @@ class AdkWebServer:
           state=state,
           session_id=session_id,
       )
+      run_request = RunAgentRequest(
+          app_name=app_name,
+          user_id=user_id,
+          session_id=session.id,
+          new_message=types.Content(
+              role="user",
+              parts=[types.Part(text="Hii! how can u help me?")],
+          ),
+          streaming=True
+      )
+      self.get_fast_api_app.run_agent_sse(run_request)
       logger.info("New session created: %s", session.id)
       return session
     except AlreadyExistsError as e:
